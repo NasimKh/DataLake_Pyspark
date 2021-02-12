@@ -28,7 +28,7 @@ def create_spark_session():
 def process_song_data(spark, input_data, output_data):
     # get filepath to song data file
     #song_data = os.path.join(input_data, 'song_data/*/*/*/*.json')
-    song_data = os.path.join(input_data, 'song_data/A/A/A/*.json')
+    song_data = os.path.join(input_data, 'song_data/*/*/*/*.json')
     
 #     songSchema = R([
 #         Fld("artist_id",Str()),
@@ -105,7 +105,7 @@ def process_log_data(spark, input_data, output_data):
                                 "weekofyear(timestamp) as week",
                                 "month(timestamp) as month",
                                 "year(timestamp) as year",
-                                "dayofweek(timestamp) as weekday"])
+                                "dayofweek(timestamp) as weekday"]).drop_duplicates()
     
     # write time table to parquet files partitioned by year and month
     print("********writing {} to s3 at {}".format('time_table', str(datetime.now())))
@@ -127,10 +127,15 @@ def process_log_data(spark, input_data, output_data):
                  'level', 
                  'song_id', 
                  'artist_id', 
-                 'sessionId as session_id', 'location', 'userAgent as user_agent']
+                 'sessionId as session_id', 
+                 'location', 
+                 'userAgent as user_agent',
+                 "month(timestamp) as month",
+                 "year(timestamp) as year"]
+    
     print("********createing {} at {}".format('songplays_table', str(datetime.now())))
 
-    songplays_table =  df_songplay_all.selectExpr(songplay_cols)
+    songplays_table =  df_songplay_all.selectExpr(songplay_cols).drop_duplicates()
 
     # write songplays table to parquet files partitioned by year and month
     print("********writing {} to s3 at {}".format('songplays_table', str(datetime.now())))
